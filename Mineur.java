@@ -36,11 +36,26 @@ public class Mineur {
 		System.out.println(new String(packet.getData()));
 	}
 	*/
+	
+	
+	// dans ce tableau, je met les 2 chiffres que le client envoie dans la transaction. Pour tester si la transaction est correcte, il suffit de prendre les 3 chiffres stocké dans ce tableau. 
+	// Si besoin, on peut mettre le tableau dans une variable global de la classe ou juste le faire passer en argument d'une fonction qui teste si la transaction est correct et pour faire le calcul du sel
 	public void manageRequest() throws IOException {
 		while(true){
 			Scanner s = new Scanner(System.in);
 			String nom = s.nextLine();
-			out.writeUTF(nom);
+			if(nom.length() == 5){
+				String mots[] = nom.split(" ");
+				int[] transaction = new int[3];
+				for(int i=0; i<3; i++)
+					transaction[i] = Integer.parseInt(mots[i]);
+				for(int i=0; i<3; i++)
+					System.out.print(transaction[i] + " ");
+				System.out.println(" ");
+				out.writeUTF(nom);
+			}
+			else
+				System.out.println("Veuillez saisir 3 entiers separe par des espaces pour votre transaction");
 		}
 	}
 	
