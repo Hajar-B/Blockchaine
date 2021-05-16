@@ -4,7 +4,7 @@ import java.util.Scanner;
 public class MineurHandler implements Runnable {
 	private ArrayList<String> transactionEnAttente;
 	
-	public void MineurHandler(){
+	public MineurHandler(){
 		transactionEnAttente = new ArrayList<>();
 	}
 	
@@ -20,7 +20,7 @@ public class MineurHandler implements Runnable {
 	public void run(){
 		while(true){
 			Scanner s = new Scanner(System.in);
-			String nom = s.nextLine();
+			String nom = s.nextLine();		
 			getTransactionEnAttente().add(nom);
 		}
 	}

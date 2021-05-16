@@ -26,9 +26,9 @@ public class ServeurCentralHandler implements Runnable {
 		bck.addBloc(j);
 		difficulte = 3;
 		
-		System.out.println("===================> Initialisation de la blockchaine");
-		System.out.println(bck.toString());
-		System.out.println("<=================================================>");
+		//System.out.println("===================> Initialisation de la blockchaine");
+		//System.out.println(bck.toString());
+		//System.out.println("<=================================================>");
 		
 		start = System.currentTimeMillis();
 	}
@@ -45,13 +45,22 @@ public class ServeurCentralHandler implements Runnable {
 		return tabCrypto;
 	}
 	
+	public Blockchaine getBck(){
+		return bck;
+	}
+	
+	public void setBck(Blockchaine bck){
+		this.bck = bck;
+	}
+	
+	
 	@Override
 	public void run() {
 		while(true){
 			try{
 				//recupere les 4 entiers envoyes par le mineur : somme, payeur, receveur et sel
 				String request = in.readUTF();
-				System.out.println(request);
+				System.out.println("Reception d'une transaction potentiellement coherente et inserable : " + request);
 				
 				//On stocke les entiers dans un tableau
 				String mots[] = request.split(" ");
@@ -67,27 +76,54 @@ public class ServeurCentralHandler implements Runnable {
 					// 3. j'envoie les 5 entiers aux mineurx : somme, payeur, receveur, sel et difficulte
 					
 					//1.
-					Etat e = new Etat(getTabCrypto());
+					int taille = bck.Bchaine.size()-1;
+					int[] tab = bck.getBchaine().get(taille).getBlocAinserer().getEtatFinal().getTabCrypto();
+					int[] newTab = new int[tab.length];
+					for(int i=0; i<tab.length;i++){
+						newTab[i] = tab[i];
+					}
+								
+					Etat e = new Etat(newTab);
 					Transaction t = new Transaction(transaction[0],transaction[1],transaction[2]);
 					Bloc b = new Bloc(e,t);
+					//System.out.println("New\n"+b.toString());
 					Jointure j = new Jointure(b,transaction[3], bck.calculHash(b,transaction[3]));
+					
 					bck.addBloc(j);
+
 					//2.
 					System.out.println("===================> Mise à jour de la blockchaine");
 					System.out.println(bck.toString());
 					System.out.println("<=================================================>");
 					//3.
+					
+					/*String sendToMineur = "";
+					for(int i=0; i<4;i++){
+						sendToMineur.concat(Integer.toString(transaction[i]));
+						sendToMineur.concat(" ");
+					}
+					sendToMineur.concat(Integer.toString(getDifficulte()));*/
+					
+					String sendToMineur = new String(); 
+					sendToMineur = Integer.toString(transaction[0]) + " " +
+								Integer.toString(transaction[1]) + " " +
+								Integer.toString(transaction[2]) + " " +
+								Integer.toString(transaction[3]) + " " +
+								Integer.toString(getDifficulte()) + " ";
+					
+					/*
 					String sendToMineur = "";
 					sendToMineur = transaction[0] + " " +
 							transaction[1] + " " +
 							transaction[2] + " " +
 							transaction[3] + " " +
-							getDifficulte();
+							getDifficulte();*/
 					byte[] message = (sendToMineur).getBytes();
 					mult.send(message);
 					System.out.println("La transaction a ete envoyee a tous les mineurs");
 						
 				}
+				
 			} catch(IOException e) {
 				System.out.println(e);
 			}
@@ -120,7 +156,6 @@ public class ServeurCentralHandler implements Runnable {
 		if(bck.verif(b) && bck.inserable(b,getDifficulte(),tr_sel[3])){
 			int hash = bck.calculHash(b,tr_sel[3]);
 			Jointure j = new Jointure(b,tr_sel[3],hash);
-			bck.addBloc(j);
 			isFinished = true; 
 		}
 		

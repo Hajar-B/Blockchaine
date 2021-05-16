@@ -74,16 +74,20 @@ public class Blockchaine {
 
 
 	//ajouter la mise a jour de hash et sel
+	
 	public void addBloc(Jointure j) {
+		
 		if(this.Bchaine.size() > 0) {
 			int somme = j.getBlocAinserer().getTransactionEffectuee().getSomme();
-			int payeur = j.getBlocAinserer().getTransactionEffectuee().getSomme();
-			int receveur = j.getBlocAinserer().getTransactionEffectuee().getSomme();
+			int payeur = j.getBlocAinserer().getTransactionEffectuee().getPayeur();
+			int receveur = j.getBlocAinserer().getTransactionEffectuee().getReceveur();
 			int[] tabCrypto = j.getBlocAinserer().getEtatFinal().getTabCrypto();
 			tabCrypto[receveur] = tabCrypto[receveur] + somme;
 			tabCrypto[payeur] = tabCrypto[payeur] - somme;
 		}
 		this.Bchaine.add(j);
+		//setBchaine(Bchaine);
+		//System.out.println(getBchaine().toString());
 	}
 	
 	public boolean verif(Bloc bloc) {
@@ -111,12 +115,6 @@ public class Blockchaine {
 		int payeurBloc = transactionBloc.getPayeur();
 		int receveurBloc = transactionBloc.getReceveur();
 		
-		//ON COMMENCE LES TESTS
-		//le payeur et le receveur doivent exister (voir si on peut le faire directement dans le mienur
-		if((payeurBloc>=0 && payeurBloc<tabCrypto.length) && (receveurBloc >=0 && receveurBloc<tabCrypto.length))
-			return false;		
-		
-		//le payeur doit avoir assez de cryptomonnaie
 		if(sommeBloc > tabPrecCrypto[payeurBloc])
 			return false;
 		
@@ -138,9 +136,9 @@ public class Blockchaine {
 		int count = 0;
 		
 		int hash = calculHash(b, sel);
+		System.out.println("Bloc = " + b.hashCode());
 		String hashToBinary = Integer.toBinaryString(hash);
 		String formatBinaryHash = String.format("%32s", hashToBinary).replaceAll(" ","0");
-		System.out.println("hash en binaire = " + formatBinaryHash);
 		
 		while(i<32) {
 			if(formatBinaryHash.charAt(i) == '1'){
@@ -157,6 +155,7 @@ public class Blockchaine {
 	}
 
 	public static void main(String[] args) {
+	
 		Blockchaine b = new Blockchaine();
 		int[] tabCrypto1 = {2,5,1};
 		Etat e1 = new Etat(tabCrypto1);

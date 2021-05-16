@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.DataInputStream;
 import java.util.Scanner;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Mineur {
 	private String ip;
@@ -18,6 +19,9 @@ public class Mineur {
 	private InetAddress group;
 	
 	private ArrayList<String> transactionEnAttente;
+	private Blockchaine bck;
+	private int difficulte;
+	private int[] tabCrypto;
 	
 	public Mineur(String ip, int port) throws IOException {
 		this.ip = ip;
@@ -31,6 +35,14 @@ public class Mineur {
 		out = new DataOutputStream(socket.getOutputStream());
 		in = new DataInputStream(System.in);
 		transactionEnAttente = new ArrayList<>();
+		
+		bck = new Blockchaine();
+		tabCrypto = new int[] {6,2,3,4,5};
+		Etat e = new Etat(tabCrypto);
+		Bloc b = new Bloc(e,null);
+		Jointure j = new Jointure(b,0,0);
+		bck.addBloc(j);
+		difficulte = 3;
 	}
 	
 	public ArrayList<String> getTransactionEnAttente(){
@@ -41,58 +53,125 @@ public class Mineur {
 		this.transactionEnAttente = transactionEnAttente;
 	}
 		
+	public Blockchaine getBck(){
+		return bck;
+	}
 	
-	// dans ce tableau, je met les 2 chiffres que le client envoie dans la transaction. Pour tester si la transaction est correcte, il suffit de prendre les 3 chiffres stocké dans ce tableau. 
-	// Si besoin, on peut mettre le tableau dans une variable global de la classe ou juste le faire passer en argument d'une fonction qui teste si la transaction est correct et pour faire le calcul du sel
+	public void setBck(Blockchaine bck){
+		this.bck = bck;
+	}
+	
+	public int getDifficulte(){
+		return difficulte;
+	}
+	
+	public void setDifficulte(int difficulte){
+		this.difficulte = difficulte;
+	}
+
 	public void manageRequest(MineurHandler minh) throws IOException {
 		while(true){
 			try{
 				setTransactionEnAttente(minh.getTransactionEnAttente());
-				for(int i=0; i<transactionEnAttente.size(); i++){
+				for(int i=0; i<getTransactionEnAttente().size(); i++){
 					System.out.println("=>"+transactionEnAttente.get(i));
 				}
 				if(getTransactionEnAttente().size() == 0){
-					Thread.sleep(6000);
+					Thread.sleep(5000);
 					System.out.println("Il n'y a plus de transaction en attente");
 				}
 				else{
 					Thread.sleep(5000);
+					//on recupere la prochaine transaction
 					String transactionEnCours = transactionEnAttente.get(0);
-					transactionEnAttente.remove(0);
 					System.out.println("Tansaction en cours de traitement : "+transactionEnCours);
+					//on la supprime de la liste d'attente
+					transactionEnAttente.remove(0);
+					//on cherche un sel
+					String mots[] = transactionEnCours.split(" ");
+					//on a la somme, le payeur et le receveur
+					int[] transaction = new int[3];
+					for(int i=0; i<3; i++)
+						transaction[i] = Integer.parseInt(mots[i]);
+						
+						
+					if(((transaction[1] >=0 && transaction[1]<tabCrypto.length) 
+						&& (transaction[1] >=0 && transaction[1]<tabCrypto.length))){
+						
+						if(transaction[1] != transaction[2]){
+							int sel = recherche_Sel(transaction,getDifficulte());
+							
+							//une fois le sel trouve, on cree une chaine qui contient:
+							// la somme, le payeur, le receveur et le sel pour les envoyer au serveur
+							String sendToServeur = "" + transaction[0] + 
+										" " + transaction[1] + 
+										" " + transaction[2] + 
+										" " + sel;
+							out.writeUTF(sendToServeur);
+						}
+						else
+							System.out.println("Vous avez saisi un payeur et un receveur qui sont identique");
+					}			
+					else
+						System.out.println("Vous avez saisi un payeur ou un receveur qui n'existe pas");
+					
 				}
 			} catch(InterruptedException e){
 				System.out.println(e);
 			}
 			
 		} 
+	}
 	
 	
-	
-		/*
-		while(true){
-			Scanner s = new Scanner(System.in);
-			String nom = s.nextLine();
-			if(nom.length() == 5){
-				String mots[] = nom.split(" ");
-				int[] transaction = new int[3];
-				for(int i=0; i<3; i++)
-					transaction[i] = Integer.parseInt(mots[i]);
-				for(int i=0; i<3; i++)
-					System.out.print(transaction[i] + " ");
-				System.out.println(" ");
-				out.writeUTF(nom);
+	public int recherche_Sel(int[] transaction, int difficulte){
+		int count=0;
+		Random rand = new Random();
+		int sel = rand.nextInt(100000000 - 0 + 1) +0;
+		
+		int taille = bck.Bchaine.size();
+		Etat e = bck.getBchaine().get(taille-1).getBlocAinserer().getEtatFinal();
+		Transaction t = new Transaction(transaction[0], transaction[1], transaction[2]);
+		Bloc b = new Bloc(e,t);
+		while(difficulte != count){
+			count = 0;
+			int h = bck.calculHash(b,sel);
+			String hBinary = Integer.toBinaryString(h);
+			String hformat = String.format("%32s",hBinary).replaceAll(" ","0");
+			for(int i=0; i<32; i++){
+				if(hformat.charAt(i) != '1')
+					count = count+1;
+				else
+					break;
+			}
+			if(count>difficulte){
+				sel = sel+1;
 			}
 			else
-				System.out.println("Veuillez saisir 3 entiers separe par des espaces pour votre transaction");
-		}*/
+				sel = sel-1;
+		}
+		return sel;
 	}
-
-	public void printMessage() throws IOException {
+	
+	public void rechercheInsertion(int[] transaction, int difficulte){
+		int sel = recherche_Sel(transaction, difficulte);
+		int taille = bck.Bchaine.size();
+		
+		Etat e = bck.getBchaine().get(taille-1).getBlocAinserer().getEtatFinal();
+		Transaction t = new Transaction(transaction[0], transaction[1], transaction[2]);
+		Bloc b = new Bloc(e,t);
+		Jointure j = new Jointure(b,sel, bck.calculHash(b,sel));
+		if(bck.verif(b) && bck.inserable(b,difficulte,sel))
+			System.out.println("Le bloc est inserable");
+	} 
+	
+	public String printMessage() throws IOException {
 		byte[] message = new byte[256];
 		DatagramPacket packet = new DatagramPacket(message, message.length);
 		multicast.receive(packet);
-		System.out.println(new String(packet.getData()));
+		String m = new String(packet.getData());
+		System.out.println("* Le serveur a valide la transaction : " + m);
+		return m;
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -101,20 +180,43 @@ public class Mineur {
 		Thread t = new Thread(minh);
 		t.start();
 		
-		/*
-		Thread t = new Thread(new Runnable(){
+		
+		Thread t2 = new Thread(new Runnable(){
 			@Override
 			public void run(){
 				while(true){
 					try {
-						min.printMessage();
+						String message = min.printMessage();
+						String mots[] = message.split(" ");
+						int[] transaction = new int[5];
+						for(int i=0; i<5;i++){
+							transaction[i]=Integer.parseInt(mots[i]);
+						}
+						//transaction[4] = Integer.valueOf(mots[4]);
+						int taille = min.getBck().getBchaine().size()-1;
+						int[] tab = min.getBck().getBchaine().get(taille).getBlocAinserer().getEtatFinal().getTabCrypto();
+						int[] newTab = new int[tab.length];
+						for(int i=0; i<tab.length;i++){
+							newTab[i] = tab[i];
+						}
+						
+						Etat e = new Etat(newTab);
+						Transaction t = new Transaction(transaction[0],transaction[1],transaction[2]);
+						Bloc b = new Bloc(e,t);
+						Jointure j = new Jointure(b,transaction[3], min.getBck().calculHash(b,transaction[3]));
+						
+						min.getBck().addBloc(j);
+						min.setDifficulte(transaction[4]);
+						System.out.println("===================> Mise à jour de la blockchaine");
+						System.out.println(min.getBck().toString());
+						System.out.println("<=================================================>");		
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				}
 			}
 		});
-		t.start();*/
+		t2.start();
 		min.manageRequest(minh);		
 	}
 
