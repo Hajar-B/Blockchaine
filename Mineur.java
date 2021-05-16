@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.io.DataOutputStream;
 import java.io.DataInputStream;
 import java.util.Scanner;
+import java.util.ArrayList;
 
 public class Mineur {
 	private String ip;
@@ -15,6 +16,8 @@ public class Mineur {
 	private DataInputStream in;
 	private MulticastSocket multicast;
 	private InetAddress group;
+	
+	private ArrayList<String> transactionEnAttente;
 	
 	public Mineur(String ip, int port) throws IOException {
 		this.ip = ip;
@@ -27,13 +30,46 @@ public class Mineur {
 		
 		out = new DataOutputStream(socket.getOutputStream());
 		in = new DataInputStream(System.in);
-
+		transactionEnAttente = new ArrayList<>();
+	}
+	
+	public ArrayList<String> getTransactionEnAttente(){
+		return transactionEnAttente;
+	}
+	
+	public void setTransactionEnAttente(ArrayList<String> transactionEnAttente){
+		this.transactionEnAttente = transactionEnAttente;
 	}
 		
 	
 	// dans ce tableau, je met les 2 chiffres que le client envoie dans la transaction. Pour tester si la transaction est correcte, il suffit de prendre les 3 chiffres stocké dans ce tableau. 
 	// Si besoin, on peut mettre le tableau dans une variable global de la classe ou juste le faire passer en argument d'une fonction qui teste si la transaction est correct et pour faire le calcul du sel
-	public void manageRequest() throws IOException {
+	public void manageRequest(MineurHandler minh) throws IOException {
+		while(true){
+			try{
+				setTransactionEnAttente(minh.getTransactionEnAttente());
+				for(int i=0; i<transactionEnAttente.size(); i++){
+					System.out.println("=>"+transactionEnAttente.get(i));
+				}
+				if(getTransactionEnAttente().size() == 0){
+					Thread.sleep(6000);
+					System.out.println("Il n'y a plus de transaction en attente");
+				}
+				else{
+					Thread.sleep(5000);
+					String transactionEnCours = transactionEnAttente.get(0);
+					transactionEnAttente.remove(0);
+					System.out.println("Tansaction en cours de traitement : "+transactionEnCours);
+				}
+			} catch(InterruptedException e){
+				System.out.println(e);
+			}
+			
+		}
+	
+	
+	
+		/*
 		while(true){
 			Scanner s = new Scanner(System.in);
 			String nom = s.nextLine();
@@ -49,7 +85,7 @@ public class Mineur {
 			}
 			else
 				System.out.println("Veuillez saisir 3 entiers separe par des espaces pour votre transaction");
-		}
+		}*/
 	}
 
 	public void printMessage() throws IOException {
@@ -61,6 +97,11 @@ public class Mineur {
 	
 	public static void main(String[] args) throws IOException {
 		Mineur min = new Mineur("localhost",3333);
+		MineurHandler minh = new MineurHandler();
+		Thread t = new Thread(minh);
+		t.start();
+		
+		/*
 		Thread t = new Thread(new Runnable(){
 			@Override
 			public void run(){
@@ -73,8 +114,8 @@ public class Mineur {
 				}
 			}
 		});
-		t.start();
-		min.manageRequest();		
+		t.start();*/
+		min.manageRequest(minh);		
 	}
 
 }
