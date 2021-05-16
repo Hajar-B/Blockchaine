@@ -65,7 +65,7 @@ public class Mineur {
 				System.out.println(e);
 			}
 			
-		}
+		} 
 	
 	
 	
