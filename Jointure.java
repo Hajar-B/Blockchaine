@@ -1,40 +1,91 @@
+/**
+ * Jointure est une classe qui contient :
+ * <ol>
+ * <li> un bloc a inserer 
+ * <li> un sel
+ * <li> un hash
+ * <ol>
+ *
+ * @autor Sohayla RABHI et Hajar BOUZIANE
+*/
 public class Jointure {
 	private Bloc blocAinserer;
 	private int sel;
 	private int hash;
 	
+	/**
+	 * Constructeur qui cree une Jointure (qui est un noeud de la Blockchaine)
+	 * 
+	 * @param blocAinserer Un bloc a inserer
+	 * @param sel Le sel de la Jointure
+	 * param hash Le hash de la Jointure
+	 */
 	public Jointure(Bloc blocAinserer, int sel, int hash) {
 		this.blocAinserer = blocAinserer;
 		this.sel = sel;
 		this.hash = hash;
 	}
 	
+	/**
+	 * Fonction qui renvoie le bloc a inserer d'une Jointure
+	 *
+	 * @return Un bloc a inserer
+	*/
 	public Bloc getBlocAinserer() {
 		return blocAinserer;
 	}
-
+	
+	/**
+	 * Fonction qui modifie le bloc a inserer d'une Jointure
+	 *
+	 * @param blocAinserer Le bloc a inserer
+	*/
 	public void setBlocAinserer(Bloc blocAinserer) {
 		this.blocAinserer = blocAinserer;
 	}
-
+	
+	/**
+	 * Fonction qui renvoie le sel d'une Jointure
+	 *
+	 * @return Un sel d'une Jointure
+	*/
 	public int getSel() {
 		return sel;
 	}
-
+	
+	/**
+	 * Fonction qui modifie le sel d'une Jointure
+	 *
+	 * @param sel Le sel d'une Jointure
+	*/
 	public void setSel(int sel) {
 		this.sel = sel;
 	}
-
+	
+	/**
+	 * Fonction qui renvoie le hash d'une Jointure
+	 *
+	 * @return Le hash d'une Jointure
+	*/
 	public int getHash() {
 		return hash;
 	}
-
+	
+	/**
+	 * Fonction qui modifie le hash d'une Jointure
+	 *
+	 * @param hash Le hash d'une Jointure
+	*/
 	public void setHash(int hash) {
 		this.hash = hash;
 	}
 
+	/**
+	 * Fonction qui renvoie le hashCode d'une Jointure
+	 *
+	 * @return Le hashCode d'une Jointure
+	*/
 	@Override
-	//j.setHash(j.hashCode())
 	public int hashCode() {
 		int resultat = 1;
 		resultat = resultat * 31 + ((this.blocAinserer == null) ? 0 : this.blocAinserer.hashCode());
@@ -43,6 +94,12 @@ public class Jointure {
 		return resultat;
 	}	
 	
+	/**
+	 * Fonction qui teste l'egalite entre deux objets de type Jointure
+	 *
+	 * @param obj Un objet de type Jointure
+	 * @return Renvoie true Si obj est identique a une instance de la classe Jointure Sinon false
+	*/
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null)
@@ -63,6 +120,11 @@ public class Jointure {
 		return true;
 	}
 	
+	/**
+	 * Fonction qui affiche le bloc a inserer, le sel et le hash d'une Jointure 
+	 *
+	 * @return Une chaine de caracteres qui contient la description d'une Jointure
+	*/
 	@Override
 	public String toString() {
 		return this.blocAinserer.toString() + "\n" + "\n\t[sel : " + sel + " | hash : " + hash + "]\n"; 

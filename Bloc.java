@@ -1,28 +1,68 @@
+/**
+ * Bloc est une classe qui contient :
+ * <ol>
+ * <li> un Etat 
+ * <li> une transaction
+ * <ol>
+ *
+ * @autor Sohayla RABHI et Hajar BOUZIANE
+*/
 public class Bloc {
 	private Etat etatFinal;
 	private Transaction transactionEffectuee;
 	
+	/**
+	 * Constructeur qui cree un Bloc
+	 * 
+	 * @param etatFinal Un etat apres transaction
+	 * @param transactionEffectuee Transaction effectuee par une personne
+	 */
 	public Bloc(Etat etatFinal, Transaction transactionEffectuee) {
 		this.etatFinal = etatFinal;
 		this.transactionEffectuee = transactionEffectuee;
 	}
 	
+	/**
+	 * Fonction qui renvoie un Etat apres une transaction
+	 *
+	 * @return Un Etat apres transaction
+	*/
 	public Etat getEtatFinal() {
 		return etatFinal;
 	}
 
+	/**
+	 * Fonction qui modifie l'Etat d'un bloc
+	 *
+	 * @param etatFinal Etat d'un bloc
+	*/
 	public void setEtatFinal(Etat etatFinal) {
 		this.etatFinal = etatFinal;
 	}
-
+	
+	/**
+	 * Fonction qui renvoie la Transaction d'un bloc
+	 *
+	 * @return La transaction d'un bloc
+	*/
 	public Transaction getTransactionEffectuee() {
 		return transactionEffectuee;
 	}
 
+	/**
+	 * Fonction qui modifie la transaction d'un bloc
+	 *
+	 * @param transactionEffectuee Transaction d'un bloc
+	*/
 	public void setTransactionEffectuee(Transaction transactionEffectuee) {
 		this.transactionEffectuee = transactionEffectuee;
 	}
 
+	/**
+	 * Fonction qui renvoie le hashCode d'un bloc
+	 *
+	 * @return Le hashCode d'un bloc
+	*/
 	@Override
 	public int hashCode() {
 		int resultat = 1;
@@ -31,6 +71,12 @@ public class Bloc {
 		return resultat;
 	}
 	
+	/**
+	 * Fonction qui teste l'egalite entre deux objets de type Bloc
+	 *
+	 * @param obj Un objet de type Bloc
+	 * @return Renvoie true Si obj est identique a une instance de la classe Bloc Sinon false
+	*/
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null)
@@ -52,7 +98,12 @@ public class Bloc {
 					return false;
 		return true;
 	}
-
+	
+	/**
+	 * Fonction qui affiche le l'etat final et la transaction effectuee d'un Bloc 
+	 *
+	 * @return Une chaine de caracteres qui contient la description d'un Bloc
+	*/
 	@Override
 	public String toString() {
 		if(this.transactionEffectuee == null) {

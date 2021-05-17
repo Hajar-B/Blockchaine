@@ -3,6 +3,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
+
+/**
+ * Classe qui gere les message envoye en multicast
+ *
+ * @autor Sohayla RABHI et Hajar BOUZIANE
+*/
 public class Multicast {
 	private DatagramSocket serverSocket;
 	private String ip;

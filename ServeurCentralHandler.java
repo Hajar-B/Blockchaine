@@ -2,58 +2,162 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 
+
+/**
+ * ServeurCentralHandler est une classe qui implemente le run d'un Thread. Cette classe permet :
+ * <ol>
+ * <li> Il initialise un blockchaine
+ * <li> Il attend de recevoir les transactions envoyes par les mineurs
+ * <li> Il verifie que les blocs crees a partir de ces transaction soient coherents et inserables
+ * <li> Il incremente une difficulte si moins de 10 minutes se sont ecoulees lors du traitement d'une transaction, sinon il la decremente
+ * <li> Si le bloc est coherent et inserable, il l'ajoute a la Blockchaine et il renvoie la transaction avec le sel et la nouvelle difficulte
+ * <ol>
+ *
+ * @autor Sohayla RABHI et Hajar BOUZIANE
+*/
 public class ServeurCentralHandler implements Runnable {
 	private Socket mineur;
 	private DataInputStream in;
+	private DataOutputStream out;
 	private Multicast mult;
 	private Blockchaine bck;
 	private int difficulte;
 	private int[] tabCrypto;
 	private long start;
+	private static ArrayList<ServeurCentralHandler> listeMineur = new ArrayList<>();
+
 	
-	
-	public ServeurCentralHandler(Socket mineur) throws IOException {
+	/**
+	 * Constructeur qui cree un ServeurCentralHandler. 
+	 *
+	 * <ol>
+	 * <li> Si la liste de mineur est vide, alors on insere un sel bloc a la blockchaine (avec un transaction NULL).
+	 * <li> Sinon, on insere a chaque nouveaux mineurs, tous les blocs qui ont ete insere a la blockchaine du serveur central avant qu'ils soient connectes.
+	 * <li> on initialise le temps ainsi que la difficulte
+	 * <ol> 
+	 *
+	 * @param mineur Un socket 
+	 * @param listeMineur La liste des mineurs qui sont connectees au serveur central
+	 * @throws IOException 
+	 */
+	public ServeurCentralHandler(Socket mineur, ArrayList<ServeurCentralHandler> listeMineur) throws IOException {
 		this.mineur = mineur;
 		in = new DataInputStream(this.mineur.getInputStream());
+		out = new DataOutputStream(this.mineur.getOutputStream());
 		mult = new Multicast();
 		
-		bck = new Blockchaine();
-		tabCrypto = new int[] {6,2,3,4,5};
-		Etat e = new Etat(tabCrypto);
-		Bloc b = new Bloc(e,null);
-		Jointure j = new Jointure(b,0,0);
-		bck.addBloc(j);
+		if(listeMineur.size() == 0){
+			bck = new Blockchaine();
+			tabCrypto = new int[] {6,2,3,4,5};
+			Etat e = new Etat(tabCrypto);
+			Bloc b = new Bloc(e,null);
+			Jointure j = new Jointure(b,0,0);
+			bck.addBloc(j);
+		}
+		else{
+			bck = misajourbckmineur(listeMineur.get(0));
+		}
 		difficulte = 3;
-		
-		//System.out.println("===================> Initialisation de la blockchaine");
-		//System.out.println(bck.toString());
-		//System.out.println("<=================================================>");
-		
+		this.listeMineur = listeMineur;
 		start = System.currentTimeMillis();
 	}
 	
+	/**
+	 * Fonction qui renvoie la difficulte courante
+	 *
+	 * @return La difficulte
+	*/
 	public int getDifficulte(){
 		return difficulte;
 	}
 	
+	/**
+	 * Fonction qui modifie la difficulte courante
+	 *
+	 * @param difficulte La nouvelle difficulte
+	*/
 	public void setDifficulte(int difficulte){
 		this.difficulte = difficulte;
 	}
 	
+	/**
+	 * Fonction qui renvoie le premier tableau de cryptomonnaie
+	 *
+	 * @return Le tableau de cryptomonnaie
+	*/
 	public int[] getTabCrypto(){
 		return tabCrypto;
 	}
 	
+	/**
+	 * Fonction qui renvoie la blockchaine
+	 *
+	 * @return La blockchaine
+	*/
 	public Blockchaine getBck(){
 		return bck;
 	}
 	
+	/**
+	 * Fonction qui modifie la blockchaine
+	 *
+	 * @param bck La nouvelle blockchaine
+	*/
 	public void setBck(Blockchaine bck){
 		this.bck = bck;
 	}
 	
-	
+	/**
+	 * Fonction qui met a jour la blockchaine de chaque nouveaux mineurs qui se connectent au serveur Central. 
+	 * De plus, elle envoie cette meme blockchaine au mineur pour qu'il puisse avoir chacun une blockchaine qui soit initialisee comme celle de serveur central.
+	 *
+	 * @param m Le premier mineur qui se soit connecte au serveur central
+	 * @return La nouvelle blockchaine du nouveau mineur
+	*/
+	public Blockchaine misajourbckmineur(ServeurCentralHandler m){
+		Blockchaine bck = new Blockchaine();
+		Blockchaine b = m.getBck();
+		String sendToMineur = new String(); 
+		sendToMineur = Integer.toString(b.getBchaine().size());
+		try{
+			out.writeUTF(sendToMineur);
+		}catch(IOException e){
+			System.out.println(e);
+		}
+		for(int i = 0; i<b.getBchaine().size();i++){
+			bck.addBloc(b.getBchaine().get(i));
+			
+			if(i>0){
+				sendToMineur = Integer.toString(b.getBchaine().get(i).getBlocAinserer().getTransactionEffectuee().getSomme()) + " " +
+						Integer.toString(b.getBchaine().get(i).getBlocAinserer().getTransactionEffectuee().getPayeur()) + " " +
+						Integer.toString(b.getBchaine().get(i).getBlocAinserer().getTransactionEffectuee().getReceveur()) + " " +
+						Integer.toString(b.getBchaine().get(i).getSel()) + " " +
+						Integer.toString(b.getBchaine().get(i).getHash()) + " " +
+						Integer.toString(b.Bchaine.get(i).getBlocAinserer().hashCode()) + " " ;
+				try{
+					out.writeUTF(sendToMineur);
+				}catch(IOException e){
+					System.out.println(e);
+				}	
+			}
+			
+		}		
+		return bck;
+	}
+		
+	/**
+	 * Fonction qui communique avec le mineur et agit en consequence.
+	 * <ol>
+	 * <li> On recupere les 4 entiers envoyes par un mineur (somme, payeur, receveur et sel)
+	 * <li> On teste si la transaction est coherente et inserable apres l'avoir insere dans bloc de la fonction maj()
+	 * <li> Si c'est coherent et inserable, alors on cree une jointure et on l'insere a la blockchaine
+	 * <li> On ajoute cette jointure a tous les mineurs connectes au serveur central
+	 * <li> On affiche l'etat de la blockchaine
+	 * <li> On envoie (avec une connexion multicast) 5 entiers a tous les mineurs (somme, payeur, receveur, sel et difficulte)
+	 * <ol>
+	*/
 	@Override
 	public void run() {
 		while(true){
@@ -70,6 +174,7 @@ public class ServeurCentralHandler implements Runnable {
 				
 				//on test si la trasaction est cohérente et insérable
 				int test = maj(transaction, getDifficulte());
+				System.out.println("test = " + test);
 				if(test == 1){
 					// 1. j'insère le bloc dans la bloc chaine
 					// 2. je l'affiche pour vérifier que c'est bon
@@ -86,24 +191,18 @@ public class ServeurCentralHandler implements Runnable {
 					Etat e = new Etat(newTab);
 					Transaction t = new Transaction(transaction[0],transaction[1],transaction[2]);
 					Bloc b = new Bloc(e,t);
-					//System.out.println("New\n"+b.toString());
 					Jointure j = new Jointure(b,transaction[3], bck.calculHash(b,transaction[3]));
 					
-					bck.addBloc(j);
-
+					for(int i=0; i<listeMineur.size(); i++){
+							listeMineur.get(i).getBck().addBloc(j);
+					}
+					
 					//2.
 					System.out.println("===================> Mise à jour de la blockchaine");
 					System.out.println(bck.toString());
 					System.out.println("<=================================================>");
-					//3.
 					
-					/*String sendToMineur = "";
-					for(int i=0; i<4;i++){
-						sendToMineur.concat(Integer.toString(transaction[i]));
-						sendToMineur.concat(" ");
-					}
-					sendToMineur.concat(Integer.toString(getDifficulte()));*/
-					
+					//3.			
 					String sendToMineur = new String(); 
 					sendToMineur = Integer.toString(transaction[0]) + " " +
 								Integer.toString(transaction[1]) + " " +
@@ -111,17 +210,9 @@ public class ServeurCentralHandler implements Runnable {
 								Integer.toString(transaction[3]) + " " +
 								Integer.toString(getDifficulte()) + " ";
 					
-					/*
-					String sendToMineur = "";
-					sendToMineur = transaction[0] + " " +
-							transaction[1] + " " +
-							transaction[2] + " " +
-							transaction[3] + " " +
-							getDifficulte();*/
 					byte[] message = (sendToMineur).getBytes();
 					mult.send(message);
-					System.out.println("La transaction a ete envoyee a tous les mineurs");
-						
+					System.out.println("La transaction a ete envoyee a tous les mineurs");			
 				}
 				
 			} catch(IOException e) {
@@ -131,6 +222,14 @@ public class ServeurCentralHandler implements Runnable {
 		
 	}
 	
+	
+	/**
+	 * Fonction qui verifie si avec la transaction que le mineur a envoye au serveur, que le bloc est coherent et inserable. Si le dernier bloc a ete insere il y a moins de 10 minutes alors on incremente la difficulte sinon on la decremente.
+	 *
+	 * @param tr_sel Le tableau qui contient la transaction 
+	 * @param difficulte La difficulte avant la verification du bloc 
+	 * @return 1 si le bloc est coherent et inserable sinon 0
+	 */
 	public int maj(int[] tr_sel, int difficulte) {
 		int res = 0;
 		
@@ -139,7 +238,7 @@ public class ServeurCentralHandler implements Runnable {
 		long fin = System.currentTimeMillis();
 		long temps_ecoule = fin -start;
 		
-		//on test si le bloc est coherent et inserable :
+		//on teste si le bloc est coherent et inserable :
 		//1. on recupere le dernier etat
 		//2. on cree une nouvelle transaction avec le tableau tr_sel
 		//3. on cree un bloc avec etat + transaction
@@ -167,9 +266,11 @@ public class ServeurCentralHandler implements Runnable {
 			start = System.currentTimeMillis();
 		}
 		
-		if(!isFinished && temps_ecoule%600000==0){
-			System.out.println("Plus de 10 minutes se sont ecoules");
+		if(isFinished && temps_ecoule >= 600000){
+			res = 1;
 			setDifficulte(getDifficulte()-1);
+			isFinished = false;
+			start = System.currentTimeMillis();
 		}
 		
 		return res;

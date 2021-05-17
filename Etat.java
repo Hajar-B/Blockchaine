@@ -1,14 +1,38 @@
+/**
+ * Etat est une classe qui contient un tableau d'entiers ou
+ * <ol>
+ * <li> les indices sont des personnes 
+ * <li> l'entier correspond à la somme d'argent que la personne possede 
+ * <ol>
+ *
+ * @autor Sohayla RABHI et Hajar BOUZIANE
+*/
 public class Etat {
 	private int[] tabCrypto;
 	
+	/**
+	 * Constructeur qui cree un Etat
+	 * 
+	 * @param tabCrypto tableau d'entier
+	 */
 	public Etat(int[] tabCrypto) {
 		this.tabCrypto = tabCrypto;
 	}
-
+	
+	/**
+	 * Fonction qui renvoie le tableau de l'Etat
+	 *
+	 * @return Tableau de l'Etat
+	*/
 	public int[] getTabCrypto() {
 		return tabCrypto;
 	}
-	
+		
+	/**
+	 * Fonction qui renvoie le hashCode d'un etat
+	 *
+	 * @return Le hashCode d'un Etat
+	*/
 	@Override
 	public int hashCode() {
 		int resultat = 1;
@@ -19,6 +43,12 @@ public class Etat {
 		return resultat;
 	}
 	
+	/**
+	 * Fonction qui teste l'egalite entre deux objets de type Etat
+	 *
+	 * @param obj Un objet de type Etat
+	 * @return Renvoie true Si obj est identique a une instance de la classe Etat Sinon false
+	*/
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null)
@@ -37,7 +67,11 @@ public class Etat {
 		return true;
 	}
 	
-	
+	/**
+	 * Fonction qui affiche le tableau d'entier d'un Etat
+	 *
+	 * @return Une chaine de caracteres qui contient la description d'un Etat
+	*/
 	@Override
 	public String toString() {
 		String chaine = "\t * Etat * \t\n";

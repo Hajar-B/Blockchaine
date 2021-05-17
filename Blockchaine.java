@@ -1,20 +1,44 @@
 import java.util.ArrayList;
 
+/**
+ * Blockchaine est une classe qui contient une liste. Cette derniere est composee de  maillons qui sont des Jointures
+ *
+ * @autor Sohayla RABHI et Hajar BOUZIANE
+*/
 public class Blockchaine {
 	public ArrayList<Jointure> Bchaine;
 	
+	/**
+	 * Constructeur qui cree une Blockchaine. La liste est vide lorsqu'elle est initialisee.
+	 * 
+	 */
 	public Blockchaine() {
 		this.Bchaine = new ArrayList<Jointure>();
 	}
 	
+	/**
+	 * Fonction qui renvoie la liste de jointures d'une Blockchaine
+	 *
+	 * @return La liste de jointures
+	*/
 	public ArrayList<Jointure> getBchaine() {
 		return Bchaine;
 	}
 
+	/**
+	 * Fonction qui modifie la liste de jointures d'une Blockchaine
+	 *
+	 * @param bchaine La nouvelle liste de jointures
+	*/
 	public void setBchaine(ArrayList<Jointure> bchaine) {
 		Bchaine = bchaine;
 	}
 	
+	/**
+	 * Fonction qui renvoie le hashCode d'une Blockchaine
+	 *
+	 * @return Le hashCode d'une Blockchaine
+	*/
 	@Override
 	public int hashCode() {
 		int resultat = 1;
@@ -25,7 +49,12 @@ public class Blockchaine {
 		return resultat;
 	}
 
-
+	/**
+	 * Fonction qui teste l'egalite entre deux objets de type Blockchaine
+	 *
+	 * @param obj Un objet de type Blockchaine
+	 * @return Renvoie true Si obj est identique a une instance de la classe Blockchaine Sinon false
+	*/
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -43,6 +72,11 @@ public class Blockchaine {
 		return true;
 	}
 	
+	/**
+	 * Fonction qui affiche une Blockchaine. Elle affiche toutes les Jointures (les blocs suivi de leur sel et hash).
+	 *
+	 * @return Une chaine de caracteres qui contient la description d'une Blockchaine.
+	*/
 	@Override
 	public String toString() {
 		String chaine = "\t * Blockchaine * \n";
@@ -50,31 +84,18 @@ public class Blockchaine {
 			chaine = chaine + 
 					"\n-------------------------------\n\tBlock numero "+ i 
 					+"\n-------------------------------\n" + 
-					this.Bchaine.get(i).toString();
+					this.Bchaine.get(i).toString() + " " +this.Bchaine.get(i).getBlocAinserer().hashCode();
 		return chaine;
 	}
-	
-	/*public int[] calculEtat(int somme, int payeur, int receveur) {
-		//je recupere le precedent bloc
-		Bloc precBloc = this.Bchaine.get(this.Bchaine.size()-1).getBlocAinserer();
-		Etat EtatPrecBloc = precBloc.getEtatFinal();
-		//je le stocke dans un nouveau tableau
 		
-		int[] newTabCrypto = new int[EtatPrecBloc.getTabCrypto().length];
-		
-		for(int i=0; i<EtatPrecBloc.getTabCrypto().length; i++)
-			newTabCrypto[i] = EtatPrecBloc.getTabCrypto()[i];
-		
-		//je chnage la monnaie du payeur et du receveur
-		newTabCrypto[receveur] = newTabCrypto[receveur] + somme;
-		newTabCrypto[payeur] = newTabCrypto[payeur] - somme;
-		//je renvoie le tableau
-		return newTabCrypto;
-	}*/
-
-
-	//ajouter la mise a jour de hash et sel
-	
+	/**
+	 * Fonction qui ajoute une Jointure a la Blockchaine:
+	 * <ol>
+	 * <li> Si la liste est vide alors on ajoute la jointure telle qu'elle est.
+	 * <li> Sinon, on retire 'somme' au payeur et on la donne au receveur.
+	 * <ol>
+	 * 
+	*/
 	public void addBloc(Jointure j) {
 		
 		if(this.Bchaine.size() > 0) {
@@ -86,10 +107,20 @@ public class Blockchaine {
 			tabCrypto[payeur] = tabCrypto[payeur] - somme;
 		}
 		this.Bchaine.add(j);
-		//setBchaine(Bchaine);
-		//System.out.println(getBchaine().toString());
 	}
 	
+	/**
+	 * Fonction qui verifie qu'un bloc est coherent a la Blockchaine. 
+	 * <ol>
+	 * <li> Si la Blockchaine est vide ET que la transaction du bloc est NULL, alors le bloc est coherent.
+	 * <li> Si la Blockchaine n'est pas vide, on recupere le tableau d'entiers du dernier Etat insere.
+	 * <li> Avec ce tableau, on verifie que le payeur a suffisamment de monnaie pour effectuer la transaction du bloc
+	 * <li> S'il a suffisamment de monnaie, alors le bloc est coherent sinon il ne l'est pas. 
+	 * <ol>
+	 * 
+	 * @param bloc Bloc a verifier avant de l'inserer dans la Blockchaine
+	 * @return True si le bloc est coherent, sinon False
+	*/
 	public boolean verif(Bloc bloc) {
 		if(this.Bchaine.size() == 0) {
 			if(bloc.getTransactionEffectuee() == null)
@@ -121,6 +152,18 @@ public class Blockchaine {
 		return true;
 	}
 	
+	/**
+	 * Fonction qui calcule le hash de la jointure que l'on veut inserer dans la Blockchaine. On fait la somme :
+	 * <ol>
+	 * <li> d'un sel
+	 * <li> du hash du bloc
+	 * <li> du hash de la precedente jointure
+	 * <ol>
+	 * 
+	 * @param b Bloc a inserer dans la Blockchaine
+	 * @param sel Un sel
+	 * @return Le hash de la jointure a inserer
+	*/
 	public int calculHash(Bloc b, int sel) {
 		int resultat = 1;
 		resultat = resultat * 31 + sel;
@@ -130,13 +173,26 @@ public class Blockchaine {
 		return resultat;
 	}
 	
-	//bloc suppose coherent donc on a pas a faire verif dedans
+	/**
+	 * Fonction qui teste si un bloc b est inserable :
+	 * <ol>
+	 * <li> On calcule le hash de la jointure qui contient le bloc b a inserer
+	 * <li> On convertit le hash en binaire 
+	 * <li> On effetctue un affichage sur 32 bits
+	 * <li> on compte le nombre de 0 successif qui se situe avant le premier '1'
+	 * <li> On compare le compteur a la difficulte : Si ils sont egaux, alors le bloc b est inserable sinon il ne l'est pas.
+	 * <ol>
+	 * 
+	 * @param b Bloc a inserer dans la Blockchaine
+	 * @param difficulte Une difficulte
+	 * @param sel Un sel
+	 * @return True si le bloc b est inserable sinon False
+	*/
 	public boolean inserable(Bloc b, int difficulte, int sel) {
 		int i = 0;
 		int count = 0;
 		
 		int hash = calculHash(b, sel);
-		System.out.println("Bloc = " + b.hashCode());
 		String hashToBinary = Integer.toBinaryString(hash);
 		String formatBinaryHash = String.format("%32s", hashToBinary).replaceAll(" ","0");
 		
@@ -150,7 +206,6 @@ public class Blockchaine {
 
 		if(difficulte == count)
 			return true;
-		
 		return false;
 	}
 
